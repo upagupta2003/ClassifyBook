@@ -2,7 +2,7 @@
 name = "classifybook"
 version = "0.1.0"
 description = "Classify Books into multiple genres it belongs to"
-authors = ["upagupta2003 <upa@immersa.co>"]
+authors = ["upagupta2003 <upagupta2003@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
