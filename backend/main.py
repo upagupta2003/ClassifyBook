@@ -1,10 +1,20 @@
 import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-import PyPDF2
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+import PyPDF2
 
 app = FastAPI()
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Maximum file size (5MB)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
@@ -44,8 +54,14 @@ async def upload_book(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
-# Mount the static files directory
-app.mount("/", StaticFiles(directory="/app/frontend/build", html=True), name="static")
+# Serve static files
+static_files_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "build")
+app.mount("/", StaticFiles(directory=static_files_dir, html=True), name="static")
+
+# Add a root endpoint for health checks
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn

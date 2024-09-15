@@ -11,6 +11,7 @@ fastapi = "^0.114.2"
 uvicorn = "^0.30.6"
 python-multipart = "^0.0.9"
 PyPDF2 = "^3.0.1"
+mangum = "^0.17.0"
 
 
 [build-system]

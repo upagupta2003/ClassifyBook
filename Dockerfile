@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build the backend
-FROM python:3.11 AS backend-build
+FROM public.ecr.aws/lambda/python:3.11 AS backend-build
 WORKDIR /app/backend
 COPY backend/pyproject.toml backend/poetry.lock ./
 RUN pip install poetry && \
@@ -16,22 +16,21 @@ RUN pip install poetry && \
 COPY backend/ ./
 
 # Stage 3: Final stage
-FROM python:3.11-slim
-WORKDIR /app
+FROM public.ecr.aws/lambda/python:3.11
+WORKDIR ${LAMBDA_TASK_ROOT}
 
 # Copy backend from backend-build stage
-COPY --from=backend-build /app/backend /app/backend
-COPY --from=backend-build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=backend-build /usr/local/bin /usr/local/bin
+COPY --from=backend-build /app/backend ${LAMBDA_TASK_ROOT}
+COPY --from=backend-build /var/lang/lib/python3.11/site-packages ${LAMBDA_TASK_ROOT}
 
 # Copy frontend build from frontend-build stage
-COPY --from=frontend-build /app/frontend/build /app/frontend/build
+COPY --from=frontend-build /app/frontend/build ${LAMBDA_TASK_ROOT}/frontend/build
 
-# Install uvicorn for running the FastAPI app
-RUN pip install uvicorn
+# Install additional dependencies
+RUN pip install mangum
 
-# Expose the port the app runs on
-EXPOSE 8000
+# Copy the Lambda handler
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}
 
-# Command to run the application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set the CMD to your handler
+CMD [ "lambda_handler.handler" ]
