@@ -18,38 +18,45 @@ from pydantic import BaseModel
 from transformers import AutoModel, AutoTokenizer, AutoConfig
 from huggingface_hub import login
 import os
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 class InferencePipeline:
     def __init__(self, model_name: str, path_to_model: str):
         self.model_name = model_name
         self.path_to_model = path_to_model
+        self.load_env()
     
-    def HuggingFaceLogin(self):
-        #this function will login to the huggingface using api key which is stored in  a env API_KEY file
-        login(token=os.getenv("API_KEY"))
+    def load_env(self):
+        # Load environment variables from .env file
+        load_dotenv()
+        self.api_key = os.getenv("API_KEY")
+        if not self.api_key:
+            raise ValueError("API_KEY not found in environment variables")
 
-    def load_model(self, model_name: str, path_to_model: str):
+    def HuggingFaceLogin(self):
+        # Use the API key loaded from .env
+        login(token=self.api_key)
+
+    def load_model(self):
         self.HuggingFaceLogin()
-        self.model = AutoModel.from_pretrained(model_name)
-        #self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        #self.config = AutoConfig.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(self.model_name)
+        # self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        # self.config = AutoConfig.from_pretrained(self.model_name)
 
     def inference_from_the_model(self, text: str):
         self.text = text
         self.predictions = self.model.generate(self.text)
         return self.predictions
     
-    def run(self):
-        self.load_model(self.model_name, self.path_to_model)
-        self.inference_from_the_model(self.text)
-        return self.predictions
+    def run(self, text: str):
+        self.load_model()
+        return self.inference_from_the_model(text)
 
 
 #Testing the above code using FastText Model which is used for Text Classification
 
 if __name__ == "__main__":
     inference = InferencePipeline("microsoft/Multilingual-MiniLM-L12-H384", "microsoft/Multilingual-MiniLM-L12-H384")
-    inference.run()
-        
+    result = inference.run("Sample text for inference")
+    print(result)
 
