@@ -19,6 +19,7 @@ from transformers import AutoModel, AutoTokenizer, AutoConfig
 from huggingface_hub import login
 import os
 from dotenv import load_dotenv
+import torch
 
 class InferencePipeline:
     def __init__(self, model_name: str, path_to_model: str):
@@ -40,13 +41,22 @@ class InferencePipeline:
     def load_model(self):
         self.HuggingFaceLogin()
         self.model = AutoModel.from_pretrained(self.model_name)
-        # self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        # self.config = AutoConfig.from_pretrained(self.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.config = AutoConfig.from_pretrained(self.model_name)
 
     def inference_from_the_model(self, text: str):
-        self.text = text
-        self.predictions = self.model.generate(self.text)
-        return self.predictions
+        # Tokenize the input
+        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        
+        # Get the model's output
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        
+        # Process the output (this will depend on your specific model and task)
+        logits = outputs.logits
+        predicted_class = torch.argmax(logits, dim=1).item()
+        
+        return predicted_class
     
     def run(self, text: str):
         self.load_model()
