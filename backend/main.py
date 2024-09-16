@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import PyPDF2
+from inference_pipeline import InferencePipeline
 
 app = FastAPI()
 
@@ -18,13 +19,11 @@ app.add_middleware(
 
 # Maximum file size (5MB)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
+MODEL_NAME = "microsoft/Multilingual-MiniLM-L12-H384"
+MODEL_PATH = "microsoft/Multilingual-MiniLM-L12-H384"
 
-def detect_genre(pdf_content):
-    # This is a mock function. In a real-world scenario, you'd use NLP or ML here.
-    # For demonstration, we'll return a random genre
-    import random
-    genres = ["Fiction", "Non-fiction", "Science Fiction", "Mystery", "Romance", "Biography"]
-    return random.choice(genres)
+# Initialize InferencePipeline
+inference_pipeline = InferencePipeline(MODEL_NAME, MODEL_PATH)
 
 @app.post("/upload-book/")
 async def upload_book(file: UploadFile = File(...)):
@@ -47,10 +46,13 @@ async def upload_book(file: UploadFile = File(...)):
         first_page = pdf_reader.pages[0]
         text = first_page.extract_text()
         
-        # Detect genre (mock function)
-        genre = detect_genre(text)
+        # Use InferencePipeline to predict genres
+        genres = inference_pipeline.run(text)
         
-        return JSONResponse(content={"filename": file.filename, "genre": genre})
+        return JSONResponse(content={
+            "filename": file.filename,
+            "genres": genres
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
