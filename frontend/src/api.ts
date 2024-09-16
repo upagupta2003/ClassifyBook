@@ -1,10 +1,20 @@
 const API_BASE_URL = '/api';
 
-export async function classifyBook(file: File): Promise<any> {
+interface Genre {
+  genre: string;
+  probability: number;
+}
+
+interface ClassificationResult {
+  filename: string;
+  genres: Genre[];
+}
+
+export async function classifyBook(file: File): Promise<ClassificationResult> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/classify`, {
+  const response = await fetch(`${API_BASE_URL}/upload-book`, {
     method: 'POST',
     body: formData,
   });
