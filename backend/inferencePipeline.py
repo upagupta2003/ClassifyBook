@@ -53,12 +53,15 @@ class InferencePipeline:
    
     def inference_from_the_model(self, text: str):
         tokenized_text = self.tokenize_the_text(text)
-        self.predictions = self.model(**tokenized_text)
-        return 
+        with torch.no_grad():
+            outputs = self.model(**tokenized_text)
+        
+        logits = outputs.logits
+        predicted_class = torch.argmax(logits, dim=1).item()
+        return predicted_class
     
     def run(self):
         self.load_model(self.model_name, self.path_to_model)
-        self.tokenize_the_text(self.text)
         return self.inference_from_the_model(self.text)
         
 
