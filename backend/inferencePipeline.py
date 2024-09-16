@@ -19,20 +19,27 @@ from transformers import AutoModelForCausalLM, GPT2Tokenizer, GPT2Model
 from huggingface_hub import login
 import os
 from dotenv import load_dotenv
-
-load_dotenv()
+import torch
 
 class InferencePipeline:
     def __init__(self, model_name: str, path_to_model: str, text: str):
         self.model_name = model_name
         self.path_to_model = path_to_model
-        self.text = text
+        self.load_env()
     
-    def HuggingFaceLogin(self):
-        #this function will login to the huggingface using api key which is stored in  a env API_KEY file
-        login(token=os.environ.get('API_KEY'))
+    def load_env(self):
+        # Load environment variables from .env file
+        load_dotenv()
+        self.api_key = os.getenv("API_KEY")
+        if not self.api_key:
+            raise ValueError("API_KEY not found in environment variables")
+        self.text = text
 
-    def load_model(self, model_name: str, path_to_model: str):
+    def HuggingFaceLogin(self):
+        # Use the API key loaded from .env
+        login(token=self.api_key)
+
+    def load_model(self):
         self.HuggingFaceLogin()
         #self.model = AutoModel.from_pretrained(model_name)
         self.model = GPT2Model.from_pretrained(model_name)
@@ -59,7 +66,7 @@ class InferencePipeline:
 #Testing the above code using FastText Model which is used for Text Classification
 
 if __name__ == "__main__":
-    inference = InferencePipeline("openai-community/gpt2-xl", "openai-community/gpt2-xl", "Hello")
-    print(inference.run())
+    inference = InferencePipeline("microsoft/Multilingual-MiniLM-L12-H384", "microsoft/Multilingual-MiniLM-L12-H384")
+    inference.run()
         
 
