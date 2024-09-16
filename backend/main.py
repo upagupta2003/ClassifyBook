@@ -25,7 +25,7 @@ MODEL_PATH = "microsoft/Multilingual-MiniLM-L12-H384"
 # Initialize InferencePipeline
 inference_pipeline = InferencePipeline(MODEL_NAME, MODEL_PATH)
 
-@app.post("/upload-book/")
+@app.post("/api/upload-book")
 async def upload_book(file: UploadFile = File(...)):
     # Check if the file is a PDF
     if not file.filename.lower().endswith('.pdf'):
@@ -56,7 +56,7 @@ async def upload_book(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
-# Serve static files
+# Adjust this path to match your project structure
 static_files_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "build")
 app.mount("/", StaticFiles(directory=static_files_dir, html=True), name="static")
 
