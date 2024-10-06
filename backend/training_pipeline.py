@@ -14,7 +14,22 @@ if not api_key:
 login(token=api_key)
 
 # Load the dataset
-dataset = load_dataset("AlekseyKorshuk/romance-books")
+romance_dataset = load_dataset("AlekseyKorshuk/romance-books")
+
+# Load the additional dataset
+fantasy_dataset = load_dataset("AlekseyKorshuk/fantasy-books")
+
+#fiction dataset
+fiction_dataset = load_dataset("AlekseyKorshuk/fiction-books")
+
+#drama dataset
+drama_dataset = load_dataset("AlekseyKorshuk/drama-books")
+
+# Combine the datasets
+combined_dataset = Dataset.from_dict({
+    "text": romance_dataset["train"]["text"] + fantasy_dataset["train"]["text"] + fiction_dataset["train"]["text"] + drama_dataset["train"]["text"],
+    "label": [0] * len(romance_dataset["train"]["text"]) + [1] * len(fantasy_dataset["train"]["text"]) + [2] * len(fiction_dataset["train"]["text"]) + [3] * len(drama_dataset["train"]["text"])
+})
 
 # Load tokenizer and model
 model_name = "microsoft/MiniLM-L12-H384-uncased"
@@ -27,14 +42,14 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 # Tokenize and encode labels function
 def tokenize_and_encode_labels(examples):
     tokenized = tokenizer(examples["text"], padding="max_length", truncation=True, max_length=512)
-    tokenized["labels"] = [1] * len(examples["text"])  # All examples are romance books
+    tokenized["labels"] = examples["label"]
     return tokenized
 
-# Tokenize and encode the dataset
-encoded_dataset = dataset["train"].map(tokenize_and_encode_labels, batched=True)
+# Tokenize and encode the combined dataset
+encoded_dataset = combined_dataset.map(tokenize_and_encode_labels, batched=True)
 
 # Prepare dataset for training
-encoded_dataset = encoded_dataset.remove_columns(["text", "url"])
+encoded_dataset = encoded_dataset.remove_columns(["text"])
 encoded_dataset.set_format("torch")
 
 # Split the dataset
@@ -71,4 +86,4 @@ tokenizer.save_pretrained("./genre_classifier")
 
 # Save the label encoder
 import joblib
-joblib.dump(["Not Romance", "Romance"], './genre_classifier/label_encoder.joblib')
+joblib.dump(["Fantasy", "Romance", "Fiction", "Drama"], './genre_classifier/label_encoder.joblib')   
