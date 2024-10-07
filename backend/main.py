@@ -46,8 +46,10 @@ async def upload_book(file: UploadFile = File(...)):
     try:
         pdf_reader = PyPDF2.PdfReader(file.file)
         # For simplicity, we're just reading the first page
-        first_page = pdf_reader.pages[0]
-        text = first_page.extract_text()
+        pages = [pdf_reader.pages[i] for i in range(len(pdf_reader.pages))]
+        text = ""
+        for p in pages:
+            text = text + " " +p.extract_text()
 
         # Use InferencePipeline to predict genres
         genres = inference_pipeline.run(text)
